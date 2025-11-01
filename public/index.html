@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSim Pro - Simulador de Protocolos OSI</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <!-- Fondo Animado -->
+    <div class="background-animation">
+        <div class="network-grid"></div>
+        <div class="floating-particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+    </div>
+
+    <!-- Header con Navegación -->
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>NetSim Pro</h1>
+                    <span>Protocol Simulator</span>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <button class="nav-btn active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </button>
+                <button class="nav-btn" data-tab="transmission">
+                    <i class="fas fa-broadcast-tower"></i>
+                    Transmisión
+                </button>
+                <button class="nav-btn" data-tab="analysis">
+                    <i class="fas fa-chart-network"></i>
+                    Análisis
+                </button>
+            </nav>
+            <div class="header-stats">
+                <div class="stat">
+                    <i class="fas fa-signal"></i>
+                    <span id="connectionStat">Offline</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-clock"></i>
+                    <span id="timeStat">--:--:--</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Panel de Conexión -->
+        <section class="connection-section" id="connectionPanel">
+            <div class="glass-card connection-card">
+                <div class="card-header">
+                    <i class="fas fa-plug"></i>
+                    <h2>Conexión entre Computadoras</h2>
+                    <div class="pulse-indicator" id="serverPulse"></div>
+                </div>
+                
+                <div class="connection-options">
+                    <div class="connection-option create-room">
+                        <div class="option-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <h3>Crear Nueva Sala</h3>
+                        <p>Inicia una nueva sesión de transmisión</p>
+                        <div class="input-group">
+                            <label for="computerName">
+                                <i class="fas fa-desktop"></i>
+                                Nombre de Computadora
+                            </label>
+                            <input type="text" id="computerName" placeholder="Ej: PC-Lab1, Laptop-Juan...">
+                        </div>
+                        <button id="createRoomBtn" class="btn-glow">
+                            <i class="fas fa-rocket"></i>
+                            Crear Sala & Transmitir
+                        </button>
+                    </div>
+                    
+                    <div class="connection-divider">
+                        <span>OR</span>
+                    </div>
+                    
+                    <div class="connection-option join-room">
+                        <div class="option-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>Unirse a Sala Existente</h3>
+                        <p>Conéctate a una sesión activa</p>
+                        <div class="input-group">
+                            <label for="joinComputerName">
+                                <i class="fas fa-laptop"></i>
+                                Tu Nombre
+                            </label>
+                            <input type="text" id="joinComputerName" placeholder="Ej: PC-Lab2, Laptop-Maria">
+                        </div>
+                        <div class="input-group">
+                            <label for="roomId">
+                                <i class="fas fa-key"></i>
+                                Código de Sala
+                            </label>
+                            <input type="text" id="roomId" placeholder="Ingresa el código de 6 dígitos">
+                        </div>
+                        <button id="joinRoomBtn" class="btn-glow">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Unirse a Sala
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="connection-status" id="connectionStatus">
+                    <div class="status-indicator disconnected">
+                        <div class="status-dot"></div>
+                        <span>Desconectado - Esperando conexión...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Panel Principal -->
+        <section class="main-section" id="mainPanel" style="display: none;">
+            <!-- Información de Sala -->
+            <div class="room-header">
+                <div class="room-info">
+                    <div class="room-badge">
+                        <i class="fas fa-door-open"></i>
+                        Sala: <span id="currentRoomId">---</span>
+                    </div>
+                    <div class="computers-connected">
+                        <i class="fas fa-network-wired"></i>
+                        <span id="connectedComputers">0</span> Computadoras Conectadas
+                    </div>
+                    <div class="transmission-count">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span id="totalTransmissions">0</span> Transmisiones
+                    </div>
+                    <button id="leaveRoomBtn" class="btn-outline">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Salir
+                    </button>
+                </div>
+            </div>
+            
+                <!-- Panel de Configuración -->
+                <div class="config-panel">
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <i class="fas fa-cogs"></i>
+                            <h3>Configuración de Transmisión</h3>
+                        </div>
+                        
+                        <div class="config-grid">
+                            <div class="config-section">
+                                <h4><i class="fas fa-database"></i> Datos a Transmitir</h4>
+                                <div class="input-group">
+                                    <textarea id="dataInput" placeholder="Ingresa tu mensaje aquí..."></textarea>
+                                </div>
+                                <div class="file-upload-area" id="fileUploadArea">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Arrastra archivos aquí o haz clic para seleccionar</p>
+                                    <input type="file" id="fileInput" accept="image/*,video/*">
+                                    <span class="file-types">Soporta: JPG, PNG, GIF, MP4, AVI</span>
+                                </div>
+                            </div>
+                            
+                            <div class="config-section">
+                                <h4><i class="fas fa-sliders-h"></i> Parámetros</h4>
+                                
+                                <!-- INPUTS OCULTOS PARA SINCRONIZACIÓN -->
+                                <div style="display: none;">
+                                    <input type="radio" id="tcp" name="transmission" value="TCP" checked>
+                                    <input type="radio" id="udp" name="transmission" value="UDP">
+                                    <input type="radio" id="textType" name="dataType" value="Texto" checked>
+                                    <input type="radio" id="imageType" name="dataType" value="Imagen">
+                                    <input type="radio" id="videoType" name="dataType" value="Video">
+                                </div>
+                                
+                                <div class="param-group">
+                                    <label>Protocolo de Transmisión</label>
+                                    <div class="protocol-selector">
+                                        <div class="protocol-option active" data-protocol="TCP">
+                                            <i class="fas fa-shield-check"></i>
+                                            <span>TCP</span>
+                                            <small>Confiable • Con ACK</small>
+                                        </div>
+                                        <div class="protocol-option" data-protocol="UDP">
+                                            <i class="fas fa-bolt"></i>
+                                            <span>UDP</span>
+                                            <small>Rápido • Sin ACK</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="param-group">
+                                    <label>Tipo de Dato</label>
+                                    <div class="type-selector">
+                                        <div class="type-option active" data-type="Texto">
+                                            <i class="fas fa-font"></i>
+                                            <span>Texto</span>
+                                        </div>
+                                        <div class="type-option" data-type="Imagen">
+                                            <i class="fas fa-image"></i>
+                                            <span>Imagen</span>
+                                        </div>
+                                        <div class="type-option" data-type="Video">
+                                            <i class="fas fa-video"></i>
+                                            <span>Video</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="param-group">
+                                    <label>Computadora Destino</label>
+                                    <select id="targetComputer" class="modern-select">
+                                        <option value="">Seleccionar destino...</option>
+                                    </select>
+                                </div>
+                                
+                                <button id="transmitBtn" class="btn-primary-large">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Iniciar Transmisión
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Transmisión -->
+            <div class="transmission-tab tab-content" id="transmission">
+                <div class="transmission-visualization">
+                    <!-- Computadora Emisora -->
+                    <div class="computer-panel emitter">
+                        <div class="computer-header">
+                            <div class="computer-avatar">
+                                <i class="fas fa-desktop"></i>
+                            </div>
+                            <div class="computer-info">
+                                <h3 id="localComputerName">Computadora Local</h3>
+                                <span class="computer-role">Emisor</span>
+                            </div>
+                            <div class="computer-stats">
+                                <div class="stat">
+                                    <i class="fas fa-upload"></i>
+                                    <span>Enviando...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="layers-stack">
+                            <div class="layer-card" id="layer7">
+                                <div class="layer-header">
+                                    <div class="layer-number">7</div>
+                                    <h4>Aplicación</h4>
+                                    <i class="fas fa-code"></i>
+                                </div>
+                                <p>Generación de datos</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer6">
+                                <div class="layer-header">
+                                    <div class="layer-number">6</div>
+                                    <h4>Presentación</h4>
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <p>Codificación & Cifrado</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer5">
+                                <div class="layer-header">
+                                    <div class="layer-number">5</div>
+                                    <h4>Sesión</h4>
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <p>Control de diálogo</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer4">
+                                <div class="layer-header">
+                                    <div class="layer-number">4</div>
+                                    <h4>Transporte</h4>
+                                    <i class="fas fa-truck-loading"></i>
+                                </div>
+                                <p>Segmentación TCP/UDP</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer3">
+                                <div class="layer-header">
+                                    <div class="layer-number">3</div>
+                                    <h4>Red</h4>
+                                    <i class="fas fa-route"></i>
+                                </div>
+                                <p>Direccionamiento IP</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer2">
+                                <div class="layer-header">
+                                    <div class="layer-number">2</div>
+                                    <h4>Enlace</h4>
+                                    <i class="fas fa-link"></i>
+                                </div>
+                                <p>Tramas & CRC</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer1">
+                                <div class="layer-header">
+                                    <div class="layer-number">1</div>
+                                    <h4>Física</h4>
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <p>Transmisión de bits</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Progreso de Encapsulamiento</span>
+                                <span id="progress1Text">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Línea de Transmisión -->
+                    <div class="transmission-line">
+                        <div class="line-container">
+                            <div class="data-packet" id="transmissionAnimation">
+                                <i class="fas fa-cube"></i>
+                            </div>
+                            <div class="connection-wave"></div>
+                        </div>
+                        <div class="line-info">
+                            <div class="connection-status" id="lineStatus">
+                                <div class="status-pulse"></div>
+                                <span>Conectado • 1.2 Gbps</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Computadora Receptora -->
+                    <div class="computer-panel receiver">
+                        <div class="computer-header">
+                            <div class="computer-avatar">
+                                <i class="fas fa-laptop"></i>
+                            </div>
+                            <div class="computer-info">
+                                <h3 id="remoteComputerName">Computadora Remota</h3>
+                                <span class="computer-role">Receptor</span>
+                            </div>
+                            <div class="computer-stats">
+                                <div class="stat">
+                                    <i class="fas fa-download"></i>
+                                    <span>Recibiendo...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="layers-stack">
+                            <div class="layer-card" id="layer1r">
+                                <div class="layer-header">
+                                    <div class="layer-number">1</div>
+                                    <h4>Física</h4>
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <p>Recepción de bits</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer2r">
+                                <div class="layer-header">
+                                    <div class="layer-number">2</div>
+                                    <h4>Enlace</h4>
+                                    <i class="fas fa-link"></i>
+                                </div>
+                                <p>Verificación CRC</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer3r">
+                                <div class="layer-header">
+                                    <div class="layer-number">3</div>
+                                    <h4>Red</h4>
+                                    <i class="fas fa-route"></i>
+                                </div>
+                                <p>Reensamblado IP</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer4r">
+                                <div class="layer-header">
+                                    <div class="layer-number">4</div>
+                                    <h4>Transporte</h4>
+                                    <i class="fas fa-truck-loading"></i>
+                                </div>
+                                <p>Reensamblado TCP/UDP</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer5r">
+                                <div class="layer-header">
+                                    <div class="layer-number">5</div>
+                                    <h4>Sesión</h4>
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <p>Confirmación</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer6r">
+                                <div class="layer-header">
+                                    <div class="layer-number">6</div>
+                                    <h4>Presentación</h4>
+                                    <i class="fas fa-lock-open"></i>
+                                </div>
+                                <p>Decodificación</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                            <div class="layer-card" id="layer7r">
+                                <div class="layer-header">
+                                    <div class="layer-number">7</div>
+                                    <h4>Aplicación</h4>
+                                    <i class="fas fa-code"></i>
+                                </div>
+                                <p>Presentación final</p>
+                                <div class="layer-progress"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Progreso de Desencapsulamiento</span>
+                                <span id="progress2Text">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Análisis -->
+            <div class="analysis-tab tab-content" id="analysis">
+                <div class="analysis-grid">
+                    <!-- Logs en Tiempo Real -->
+                    <div class="analysis-card logs-card">
+                        <div class="card-header">
+                            <i class="fas fa-terminal"></i>
+                            <h3>Logs de Transmisión</h3>
+                            <div class="card-actions">
+                                <button class="btn-icon" id="clearLogsBtn">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="logs-container">
+                            <div class="log-tabs">
+                                <button class="log-tab active" data-log="encapsulation">
+                                    <i class="fas fa-layer-group"></i>
+                                    Encapsulamiento
+                                </button>
+                                <button class="log-tab" data-log="decapsulation">
+                                    <i class="fas fa-cube"></i>
+                                    Desencapsulamiento
+                                </button>
+                                <button class="log-tab" data-log="network">
+                                    <i class="fas fa-network-wired"></i>
+                                    Red
+                                </button>
+                                <button class="log-tab" data-log="transmission">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    General
+                                </button>
+                            </div>
+                            <div class="logs-content">
+                                <div id="encapsulationLogs" class="log-section active">
+                                    <div class="log-placeholder">
+                                        <i class="fas fa-layer-group"></i>
+                                        <p>Los logs de encapsulamiento aparecerán aquí</p>
+                                    </div>
+                                </div>
+                                <div id="decapsulationLogs" class="log-section">
+                                    <div class="log-placeholder">
+                                        <i class="fas fa-cube"></i>
+                                        <p>Los logs de desencapsulamiento aparecerán aquí</p>
+                                    </div>
+                                </div>
+                                <div id="networkLogs" class="log-section">
+                                    <div class="log-placeholder">
+                                        <i class="fas fa-network-wired"></i>
+                                        <p>Los logs de red aparecerán aquí</p>
+                                    </div>
+                                </div>
+                                <div id="transmissionLogs" class="log-section">
+                                    <div class="log-placeholder">
+                                        <i class="fas fa-exchange-alt"></i>
+                                        <p>Los logs generales de transmisión aparecerán aquí</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Datos Recibidos -->
+                    <div class="analysis-card data-card">
+                        <div class="card-header">
+                            <i class="fas fa-database"></i>
+                            <h3>Datos Recibidos</h3>
+                        </div>
+                        <div class="data-container" id="receivedContent">
+                            <div class="data-placeholder">
+                                <i class="fas fa-inbox"></i>
+                                <h4>No hay datos recibidos</h4>
+                                <p>Los datos transmitidos aparecerán aquí</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Notificaciones -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
