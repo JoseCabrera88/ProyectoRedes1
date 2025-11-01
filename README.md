@@ -46,13 +46,13 @@ proyecto-final-redes/
 3. **Acceder a la aplicación:**
 
 - Abrir navegador web
-- Ir a: http://localhost:3000
-- Para conectar otra computadora: usar la IP del servidor (ej: http://192.168.1.100:3000)
+- Ir a: http://localhost:3001
+- Para conectar otra computadora: usar la IP del servidor (ej: http://192.168.1.100:3001)
 
 ## Instrucciones de Uso
 1. Configurar el Servidor
 - Ejecutar npm start en la computadora que hará de servidor
-- Anotar la IP y puerto (ej: http://192.168.1.100:3000)
+- Anotar la IP y puerto (ej: http://192.168.1.100:3001)
 
 2. Conectar Computadoras
 
