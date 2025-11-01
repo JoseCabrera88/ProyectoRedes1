@@ -49,14 +49,6 @@ proyecto-final-redes/
 - Ir a: http://localhost:3000
 - Para conectar otra computadora: usar la IP del servidor (ej: http://192.168.1.100:3000)
 
-Despliegue en Internet (Opcional)
-
-Para usar desde cualquier lugar:
-Subir a servicios como Heroku, Railway, o Render
-O usar ngrok para exponer localmente:
-
-ngrok http 3000
-
 ## Instrucciones de Uso
 1. Configurar el Servidor
 - Ejecutar npm start en la computadora que hará de servidor
