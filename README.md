@@ -6,13 +6,13 @@ de datos entre computadoras reales a través de Internet. Muestra el proceso de 
 a través de un modelo OSI simplificado con comunicación en tiempo real.
 
 ## Características
-- ✅ Comunicación real entre computadoras a través de Internet
-- ✅ Sistema de salas para conectar computadoras específicas
-- ✅ Transmisión de texto, imágenes y videos
-- ✅ Simulación del modelo OSI de 7 capas
-- ✅ Protocolos TCP y UDP simulados
-- ✅ Visualización en tiempo real del proceso
-- ✅ Interfaz moderna y responsive
+-  Comunicación real entre computadoras a través de Internet
+-  Sistema de salas para conectar computadoras específicas
+-  Transmisión de texto, imágenes y videos
+-  Simulación del modelo OSI de 7 capas
+-  Protocolos TCP y UDP simulados
+-  Visualización en tiempo real del proceso
+-  Interfaz moderna y responsive
 
 ## Estructura del Proyecto
 
